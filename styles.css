@@ -401,27 +401,48 @@ body::after {
     z-index: 1;
 }
 
-.welcome-icon { 
-    font-size: 5rem; 
-    display: block;
-    margin-bottom: var(--space-lg);
-    text-shadow: 0 0 30px var(--glow-primary);
-    animation: float 3s ease-in-out infinite;
-}
 
 @keyframes float {
     0%, 100% { transform: translateY(0); }
     50% { transform: translateY(-10px); }
 }
 
-.welcome-content h2 { 
+.welcome-content h2 {
     font-family: var(--font-tech);
-    font-size: 1.8rem; 
-    margin: var(--space-md) 0; 
-    color: var(--white-pure);
-    text-transform: uppercase;
+    font-size: 2rem;
     letter-spacing: 3px;
-    text-shadow: 0 0 20px rgba(255, 255, 255, 0.3);
+    text-transform: uppercase;
+    color: var(--white-soft);
+
+    display: inline-block;
+    overflow: hidden;
+    white-space: nowrap;
+    border-right: 3px solid var(--white-pure);
+
+    text-shadow:
+        0 0 5px var(--white-pure),
+        0 0 10px var(--glow-primary);
+
+    animation:
+        typing-loop 4s steps(13, end) infinite,
+        blink-caret .75s step-end infinite;
+}
+
+@keyframes typing-loop {
+    from {
+        width: 0;
+    }
+    75% {
+        width: 100%;
+    }
+    to {
+        width: 100%;
+    }
+}
+
+@keyframes blink-caret {
+    from, to { border-color: transparent; }
+    50% { border-color: var(--white-pure); } 
 }
 
 .welcome-content p {
@@ -981,7 +1002,7 @@ body.turbo .chat-bubble.ai .refined-content {
 
 @keyframes blink-caret { 
     from, to { border-color: transparent } 
-    50% { border-color: var(--glow-secondary); } 
+    50% { border-color: var(--white-pure); }
 }
 
 #turbo-btn {
