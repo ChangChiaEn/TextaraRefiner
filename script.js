@@ -1,6 +1,6 @@
 document.addEventListener('DOMContentLoaded', () => {
     // ⚠️ 請將此處的 URL 替換為您 Colab 後端生成的 ngrok 網址
-    const BACKEND_URL = 'https://8d599325e682.ngrok-free.app';
+    const BACKEND_URL = 'https://d03a8ebd8a85.ngrok-free.app';
 
     // --- DOM Elements ---
     const reportListEl = document.getElementById('report-list');
@@ -430,7 +430,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
         
         if (fixed > 0) {
-            console.log(`✅ 修復了 ${fixed} 張圖片的 src`);
+            console.log(`修復了 ${fixed} 張圖片的 src`);
         }
     }
 
@@ -749,7 +749,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     img.src = imgData.src;
                     img.alt = imgData.alt;
                     if (imgData.className) img.className = imgData.className;
-                    console.log('✅ 恢復了一張圖片');
+                    console.log('恢復了一張圖片');
                 }
                 
                 // 如果圖片完全不存在，嘗試重新插入
@@ -771,7 +771,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         } else {
                             parent.appendChild(newImg);
                         }
-                        console.log('✅ 重新插入了一張丟失的圖片');
+                        console.log('重新插入了一張丟失的圖片');
                     }
                 }
             });
@@ -799,12 +799,10 @@ document.addEventListener('DOMContentLoaded', () => {
             chatHistory = [];
             // 如果是完全重置，也清空修改記錄
             refinedSections = [];
-            console.log('🔄 重置 refine panel，清空修改記錄');
+            console.log('重置 refine panel，清空修改記錄');
         }
     }
 
     // --- Start Application ---
     init();
-
 });
-
