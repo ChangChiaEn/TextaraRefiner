@@ -1,6 +1,6 @@
 document.addEventListener('DOMContentLoaded', () => {
     // ⚠️ 請將此處的 URL 替換為您 Colab 後端生成的 ngrok 網址
-    const BACKEND_URL = 'https://7febba17fd34.ngrok-free.app';
+    const BACKEND_URL = 'https://05e269229cc7.ngrok-free.app';
 
     // --- DOM Elements ---
     const reportListEl = document.getElementById('report-list');
@@ -27,6 +27,8 @@ document.addEventListener('DOMContentLoaded', () => {
     let isLoadingReport = false;
     let selectReportDebounced = null;
     let refinedSections = [];
+    let currentSessionId = null;  
+    let currentEditId = null; 
 
     // --- Initialization & Connection ---
     function init() {
@@ -168,10 +170,10 @@ document.addEventListener('DOMContentLoaded', () => {
             // 檢查是否點擊了下載圖示
             const downloadIcon = e.target.closest('.download-icon');
             if (downloadIcon) {
-                e.preventDefault(); // ✨ 關鍵：阻止<a>標籤的預設跳轉行為
+                e.preventDefault(); //阻止<a>標籤的預設跳轉行為
                 const fileId = downloadIcon.dataset.id;
                 const filename = downloadIcon.dataset.filename;
-                triggerDownload(fileId, filename, downloadIcon); // ✨ 調用新的下載處理函式
+                triggerDownload(fileId, filename, downloadIcon); // 調用新的下載處理函式
                 return;
             }
 
@@ -193,50 +195,49 @@ document.addEventListener('DOMContentLoaded', () => {
             if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendInstruction(); }
         });
         saveReportBtn.addEventListener('click', saveReport);
+        const viewHistoryBtn = document.getElementById('view-history-btn');
+        if (viewHistoryBtn) {
+            viewHistoryBtn.addEventListener('click', showModificationHistory);
+        }
+        
+        // 關閉歷史面板按鈕
+        const closeHistoryBtn = document.getElementById('close-history-btn');
+        if (closeHistoryBtn) {
+            closeHistoryBtn.addEventListener('click', closeHistoryModal);
+        }
+        
+        // 點擊背景關閉面板
+        const historyModal = document.getElementById('history-modal');
+        if (historyModal) {
+            historyModal.addEventListener('click', (e) => {
+                if (e.target === historyModal) {
+                    closeHistoryModal();
+                }
+            });
+        }
+
+        document.addEventListener('keydown', (e) => {
+            // Ctrl+Shift+D: 查看訓練數據統計 (D = Data)
+            if (e.ctrlKey && e.shiftKey && e.key === 'D') {
+                e.preventDefault();
+                showTrainingStats();
+            }
+            
+            // Ctrl+Shift+A: 查看詳細分析 (A = Analysis)
+            if (e.ctrlKey && e.shiftKey && e.key === 'A') {
+                e.preventDefault();
+                showDetailedAnalysis();
+            }
+            
+            // Ctrl+Shift+E: 導出微調數據 (E = Export)
+            if (e.ctrlKey && e.shiftKey && e.key === 'E') {
+                e.preventDefault();
+                exportFinetuningData();
+            }
+        });
+
+        
     }
-
-    // --- Konami Code Easter Egg ---
-    const konamiSequence = [38, 38, 40, 40, 37, 39, 37, 39, 66, 65]; // ↑ ↑ ↓ ↓ ← → ← → B A
-    let konamiIndex = 0;
-
-
-    const ericSequence = [69, 82, 73, 67]; // E R I C 的鍵盤碼
-    let ericIndex = 0;
-
-    window.addEventListener('keydown', e => {
-        // 如果使用者正在輸入框中打字，則重置所有密技序列，避免誤觸
-        if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
-            konamiIndex = 0;
-            ericIndex = 0;
-            return;
-        }
-
-        // --- 檢查 Konami Code ---
-        if (e.keyCode === konamiSequence[konamiIndex]) {
-            konamiIndex++;
-            if (konamiIndex === konamiSequence.length) {
-                console.log("🚀 Konami Code Activated!");
-                activateSecretMode(); // 觸發第一個彩蛋
-                konamiIndex = 0; // 重置索引
-            }
-        } else {
-            konamiIndex = 0;
-        }
-
-        // --- 檢查 ERIC Code ---
-        if (e.keyCode === ericSequence[ericIndex]) {
-            ericIndex++;
-            if (ericIndex === ericSequence.length) {
-                console.log("💥 ERIC Code Activated! System Collapse Imminent!");
-                triggerPageCollapse(); // 觸發第二個彩蛋
-                ericIndex = 0; // 重置索引
-            }
-        } else {
-            // 如果按錯了，只重置 ERIC 的索引
-            ericIndex = 0;
-        }
-    });
-
 
 
     // 圖片保護機制：為所有圖片添加唯一 ID
@@ -252,120 +253,6 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
         console.log(`🛡️ 保護了 ${images.length} 張圖片`);
-    }
-
-
-    function activateSecretMode() {
-        // --- Part 1: 天崩地裂特效 ---
-        document.body.classList.add('screen-shake');
-        
-        // --- Part 2: 自動下載 EasterEgg.jpg (在特效結束後執行) ---
-        const shakeAnimationDuration = 800; // 必須與 CSS 中的動畫時間匹配
-        setTimeout(() => {
-            console.log("💥 特效結束，開始下載秘密檔案...");
-            // 使用我們現有的下載函式，請求新的 API 端點
-            triggerDownload(null, "EasterEgg.jpg", null, `${BACKEND_URL}/api/special/download-easteregg`);
-            
-            // 動畫結束後移除 class，以便下次觸發
-            document.body.classList.remove('screen-shake');
-        }, shakeAnimationDuration);
-
-        // --- Part 3: 啟用 Turbo UI 強化模式 (您提供的程式碼) ---
-        document.body.classList.toggle('turbo');
-        
-        // 動態打字效果的樣式注入
-        const styleId = 'turbo-typing-style';
-        if (!document.getElementById(styleId)) {
-            const style = document.createElement('style');
-            style.id = styleId;
-            // 我們讓打字動畫只在 Turbo 模式啟用時生效
-            style.textContent = `
-                body.turbo .chat-bubble.ai .refined-content { 
-                    display: inline-block; /* 讓 border-right 生效 */
-                    animation: typing 2s steps(40, end), blink-caret .75s step-end infinite;
-                    white-space: nowrap; 
-                    overflow: hidden; 
-                    border-right: .15em solid var(--secondary-color);
-                    max-width: 100%;
-                }
-                @keyframes typing { from { width: 0 } to { width: 100% } }
-                @keyframes blink-caret { from, to { border-color: transparent } 50% { border-color: var(--secondary-color); } }
-            `;
-            document.head.appendChild(style);
-        }
-
-        // Turbo 開關按鈕
-        const buttonId = 'turbo-btn';
-        if (!document.getElementById(buttonId)) {
-            const btn = document.createElement('button');
-            btn.id = buttonId;
-            btn.className = 'btn';
-            btn.style.cssText = 'position:fixed; top:20px; right:20px; z-index:1001;';
-            
-            const updateButtonState = () => {
-                const isTurbo = document.body.classList.contains('turbo');
-                btn.innerHTML = isTurbo ? '🚀&nbsp;Turbo&nbsp;On' : '🚀&nbsp;Turbo&nbsp;Off';
-                if(isTurbo) {
-                    btn.classList.add('btn-primary');
-                } else {
-                    btn.classList.remove('btn-primary');
-                }
-            };
-            
-            btn.onclick = () => {
-                document.body.classList.toggle('turbo');
-                updateButtonState();
-            };
-            
-            document.body.appendChild(btn);
-            updateButtonState();
-        }
-    }
-
-
-    function triggerPageCollapse() {
-        console.log("💥 執行頁面崩潰程序...");
-
-        triggerDownload(
-            null, 
-            "EasterEgg2.jpg", 
-            null, 
-            `${BACKEND_URL}/api/special/download-easteregg2`
-        );
-
-        setTimeout(() => {
-            // 創建一個全螢幕的紅色遮罩層
-            const crashOverlay = document.createElement('div');
-            crashOverlay.style.cssText = `
-                position: fixed;
-                top: 0;
-                left: 0;
-                width: 100vw;
-                height: 100vh;
-                background-color: #8B0000; /* 深紅色 */
-                color: white;
-                display: flex;
-                justify-content: center;
-                align-items: center;
-                font-size: 4vw;
-                font-family: 'Courier New', Courier, monospace;
-                text-align: center;
-                z-index: 9999;
-                flex-direction: column;
-                line-height: 1.5;
-            `;
-            crashOverlay.innerHTML = `
-                <div>FATAL SYSTEM ERROR</div>
-                <div><span style="background-color: white; color: #8B0000; padding: 0 10px;">ERIC.SYS CORRUPTED</span></div>
-                <div>PLEASE REFRESH YOUR BROWSER.</div>
-            `;
-            
-            // 直接替換掉整個 body 內容，造成頁面結構的完全崩潰
-            document.body.innerHTML = '';
-            document.body.appendChild(crashOverlay);
-            document.body.style.backgroundColor = '#8B0000';
-
-        }, 1500); // 延遲 1.5 秒，給予使用者反應時間
     }
 
     async function triggerDownload(fileId, filename, iconElement, directUrl = null) {
@@ -430,7 +317,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
         
         if (fixed > 0) {
-            console.log(`修復了 ${fixed} 張圖片的 src`);
+            console.log(`✅ 修復了 ${fixed} 張圖片的 src`);
         }
     }
 
@@ -508,7 +395,9 @@ document.addEventListener('DOMContentLoaded', () => {
             ws.send(JSON.stringify({
                 selection: currentSelection.text,
                 instruction: instruction,
-                history: chatHistory
+                history: chatHistory,
+                report_id: currentReport.id,   
+                report_name: currentReport.name  
             }));
         } else {
             addMessageToChat('ai', "連線錯誤，無法發送請求。");
@@ -517,6 +406,30 @@ document.addEventListener('DOMContentLoaded', () => {
         addMessageToChat('ai', null, true);
     }
 
+    
+    function sendUserFeedback(editId, feedback, issueDescription = null) {
+        /**
+         * 發送用戶對AI修改的反饋
+         * @param {string} editId - 編輯ID
+         * @param {string} feedback - 'accepted' | 'rejected' | 'modified'
+         * @param {string} issueDescription - 問題描述（可選）
+         */
+        if (ws && ws.readyState === WebSocket.OPEN) {
+            ws.send(JSON.stringify({
+                type: "user_feedback",
+                edit_id: editId,
+                feedback: feedback,
+                issue_description: issueDescription  
+            }));
+            
+            const logMsg = issueDescription 
+                ? `已發送反饋: ${feedback} (問題: ${issueDescription}) for edit ${editId}`
+                : `已發送反饋: ${feedback} for edit ${editId}`;
+            console.log(logMsg);
+        } else {
+            console.error("WebSocket 未連接，無法發送反饋");
+        }
+    }
 
 
 
@@ -543,20 +456,43 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function saveReport() {
         if (!currentReport.id) return;
+        
+        // 即使沒有修改也允許保存副本
         if (refinedSections.length === 0) {
-            saveStatusEl.innerHTML = '<span>報告未做任何修改，無需保存。</span>';
-            setTimeout(() => { saveStatusEl.innerHTML = ''; }, 3000);
-            return;
+            const userConfirm = confirm(
+                '您尚未對此報告進行任何修改。\n\n' +
+                '是否要保存一份此報告的副本?\n' +
+                '(這將創建一個相同內容的新檔案)'
+            );
+            
+            if (!userConfirm) {
+                saveStatusEl.innerHTML = '<span>已取消保存。</span>';
+                setTimeout(() => { saveStatusEl.innerHTML = ''; }, 2000);
+                return;
+            }
         }
 
         // 檔名修改邏輯更新
         const originalBaseName = currentReport.name.split('/').pop().trim().replace('.docx', '');
-        const suggestedName = `${originalBaseName}_refined`;
+        
+        // 智能處理已refined的檔名
+        let suggestedName;
+        if (originalBaseName.includes('_refined')) {
+            // 如果已經是refined檔案，建議名稱不再添加refined
+            const timestamp = new Date().toISOString().slice(0,10).replace(/-/g, '');
+            suggestedName = `${originalBaseName}_v${timestamp}`;
+        } else {
+            suggestedName = `${originalBaseName}_refined`;
+        }
         
         // 讓使用者有機會修改檔名
-        let userProvidedName = prompt("若要修改檔名請輸入，或直接按「確定」以預設名稱儲存：", suggestedName);
+        let userProvidedName = prompt(
+            `${refinedSections.length > 0 ? '已記錄 ' + refinedSections.length + ' 處修改。\n\n' : ''}` +
+            '若要修改檔名請輸入，或直接按「確定」以預設名稱儲存：', 
+            suggestedName
+        );
 
-        // 如果使用者點擊「取消」(prompt 返回 null)，我們就使用預設建議的檔名
+        // 如果使用者點擊「取消」，使用預設建議的檔名
         if (userProvidedName === null) {
             userProvidedName = suggestedName;
             console.log('使用者取消了檔名修改，使用預設名稱:', suggestedName);
@@ -564,7 +500,7 @@ document.addEventListener('DOMContentLoaded', () => {
         
         // 如果使用者輸入了空字串，也視為取消
         if (!userProvidedName || userProvidedName.trim() === '') {
-            saveStatusEl.innerHTML = '<span>已取消儲存（檔名不可為空）。</span>';
+            saveStatusEl.innerHTML = '<span>已取消儲存(檔名不可為空)。</span>';
             setTimeout(() => { saveStatusEl.innerHTML = ''; }, 2000);
             return;
         }
@@ -587,7 +523,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     refined_sections: refinedSections,
                     filename: currentReport.name,
                     original_file_id: currentReport.id,
-                    new_filename: userProvidedName // 將最終決定的檔名傳給後端
+                    new_filename: userProvidedName
                 })
             });
 
@@ -601,7 +537,7 @@ document.addEventListener('DOMContentLoaded', () => {
             currentReport.name = newFile.name;
 
             saveStatusEl.innerHTML = `
-                <span> 保存成功! (共 ${result.replaced_count} 處修改)</span>
+                <span> 保存成功! ${result.replaced_count > 0 ? `(共 ${result.replaced_count} 處修改)` : '(已創建副本)'}</span>
                 <a href="#" class="download-link" data-id="${newFile.id}" data-filename="${newFile.name}">下載檔案</a> |
                 <a href="${newFile.webViewLink}" target="_blank">在雲端檢視</a>
             `;
@@ -622,23 +558,176 @@ document.addEventListener('DOMContentLoaded', () => {
 
         } catch (error) {
             console.error("進階保存報告失敗:", error);
-            saveStatusEl.innerHTML = `保存失敗: ${error.message}`;
+            saveStatusEl.innerHTML = ` 保存失敗: ${error.message}`;
         } finally {
             saveReportBtn.disabled = false;
             saveReportBtn.innerHTML = '<span class="icon">💾</span> 保存報告';
         }
     }
 
+
+    // 獲取並顯示訓練數據統計
+    async function showTrainingStats() {
+        try {
+            const response = await fetch(`${BACKEND_URL}/api/training-stats`, {
+                headers: { 'ngrok-skip-browser-warning': 'true' }
+            });
+            
+            if (!response.ok) throw new Error('無法獲取統計');
+            
+            const stats = await response.json();
+            
+            // 創建統計顯示信息
+            const statsMessage = `
+    ╔═══════════════════════════════════════╗
+            AI 訓練數據統計報告               
+    ╚═══════════════════════════════════════╝
+
+    總文件數: ${stats.total_files}
+    總樣本數: ${stats.total_samples}
+    存儲位置: PaperGenerator/training_data/
+
+    ${stats.files && stats.files.length > 0 ? `
+    最近的文件:
+    ${stats.files.slice(0, 5).map(f => `  • ${f.name} (${new Date(f.modifiedTime).toLocaleDateString()})`).join('\n')}
+    ` : ''}
+
+    這些數據可用於微調 AI 模型
+    數據格式: JSONL (標準訓練格式)
+            `;
+            
+            alert(statsMessage);
+            console.log('訓練數據統計:', stats);
+                
+        } catch (error) {
+            console.error('獲取統計失敗:', error);
+            alert('無法獲取訓練數據統計\n\n可能原因：\n1. 後端服務未啟動\n2. 訓練數據文件夾未初始化\n3. 網絡連接問題');
+        }
+    }
+
+
+    // 查看詳細訓練數據分析
+    async function showDetailedAnalysis() {
+        try {
+            const response = await fetch(`${BACKEND_URL}/api/training-analysis`, {
+                headers: { 'ngrok-skip-browser-warning': 'true' }
+            });
+            
+            if (!response.ok) throw new Error('無法獲取分析');
+            
+            const analysis = await response.json();
+            
+            // 格式化編輯類型分布
+            const editTypeStr = Object.entries(analysis.edit_type_distribution || {})
+                .map(([type, count]) => `  • ${type}: ${count}`)
+                .join('\n');
+            
+            const analysisMessage = `
+    ╔═══════════════════════════════════════════╗
+        AI 訓練數據質量分析報告               
+    ╚═══════════════════════════════════════════╝
+
+    總體統計:
+    • 總樣本數: ${analysis.total_samples}
+    • 平均編輯比率: ${(analysis.average_edit_ratio * 100).toFixed(2)}%
+    • 多輪編輯數: ${analysis.multi_turn_edits}
+
+    編輯類型分布:
+    ${editTypeStr}
+
+    質量指標:
+    • 高質量 (用戶接受): ${analysis.quality_metrics.high_quality}
+    • 需改進 (用戶拒絕): ${analysis.quality_metrics.needs_improvement}
+    • 未評價: ${analysis.total_samples - analysis.quality_metrics.high_quality - analysis.quality_metrics.needs_improvement}
+
+    建議:
+    ${analysis.average_edit_ratio > 0.5 ? '✓ 編輯幅度適中，模型學習效果好' : '⚠ 編輯幅度較小，考慮收集更大改動的樣本'}
+    ${analysis.quality_metrics.high_quality > analysis.total_samples * 0.7 ? '✓ 高質量樣本佔比良好' : '⚠ 建議增加高質量樣本比例'}
+            `;
+            
+            alert(analysisMessage);
+            console.log('詳細分析:', analysis);
+                
+        } catch (error) {
+            console.error('獲取分析失敗:', error);
+            alert('無法獲取訓練數據分析\n\n可能原因:\n1. 後端服務未啟動\n2. 訓練數據文件夾未初始化\n3. 網絡連接問題');
+        }
+    }
+
+    // 導出微調數據
+    async function exportFinetuningData() {
+        const format = prompt(
+            '選擇導出格式:\n\n' +
+            '1. OpenAI (輸入: openai)\n' +
+            '2. Anthropic/Claude (輸入: anthropic)\n\n' +
+            '請輸入格式名稱:',
+            'anthropic'
+        );
+        
+        if (!format || !['openai', 'anthropic'].includes(format.toLowerCase())) {
+            alert('已取消或格式無效');
+            return;
+        }
+        
+        try {
+            console.log(`開始導出 ${format} 格式的微調數據...`);
+            
+            const downloadUrl = `${BACKEND_URL}/api/export-for-finetuning?format=${format}`;
+            
+            // 創建隱藏的下載鏈接
+            const a = document.createElement('a');
+            a.href = downloadUrl;
+            a.style.display = 'none';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            
+            alert(` 微調數據導出成功！\n格式: ${format.toUpperCase()}\n文件將自動下載`);
+            
+        } catch (error) {
+            console.error('導出失敗:', error);
+            alert(` 導出失敗: ${error.message}`);
+        }
+    }
+
+    
     // --- UI Updates & Helpers ---
     function handleWebSocketMessage(data) {
         const loadingBubble = chatHistoryEl.querySelector('.loading-bubble');
         if (loadingBubble) loadingBubble.remove();
 
         if (data.type === 'refinement_result') {
-            const { original_instruction, refined_text } = data;
-            chatHistory.push({ role: "user", content: `原始文字：${currentSelection.text}\n指示：${original_instruction}` });
-            chatHistory.push({ role: "assistant", content: refined_text });
-            addMessageToChat('ai', { original: original_instruction, refined: refined_text });
+            const { original_instruction, refined_text, session_id } = data;
+            
+            // 保存 session_id
+            currentSessionId = session_id;
+            
+            // 生成編輯ID（從時間戳和哈希組合）
+            const editId = `${Date.now()}_${Math.floor(Math.random() * 10000)}`;
+            currentEditId = editId;
+            
+            chatHistory.push({ 
+                role: "user", 
+                content: `原始文字:${currentSelection.text}\n指示:${original_instruction}` 
+            });
+            chatHistory.push({ 
+                role: "assistant", 
+                content: refined_text 
+            });
+            
+            // 傳遞 editId 給 addMessageToChat
+            addMessageToChat('ai', { 
+                original: original_instruction, 
+                refined: refined_text,
+                editId: editId  // 新增
+            });
+            
+        } else if (data.type === 'feedback_recorded') {
+            console.log(` 反饋已記錄: ${data.feedback} for ${data.edit_id}`);
+            
+        } else if (data.type === 'feedback_error') {
+            console.error(" 反饋記錄失敗:", data.error);
+            
         } else if (data.error) {
             console.error("後端 WebSocket 錯誤:", data.error);
             addMessageToChat('ai', `發生錯誤: ${data.error}`);
@@ -648,6 +737,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function addMessageToChat(sender, content, isLoading = false) {
         const bubble = document.createElement('div');
         bubble.className = `chat-bubble ${sender}`;
+        
         if (isLoading) {
             bubble.classList.add('loading-bubble');
             bubble.innerHTML = '<div class="loader"></div>';
@@ -656,16 +746,109 @@ document.addEventListener('DOMContentLoaded', () => {
         } else if (sender === 'ai') {
             if (typeof content === 'object') {
                 bubble.innerHTML = `
-                    <p>根據您的指令「<strong>${content.original}</strong>」，我將文字修改為：</p>
+                    <p>根據您的指令「<strong>${content.original}</strong>」,我將文字修改為:</p>
                     <div class="refined-content">${content.refined.replace(/\n/g, '<br>')}</div>
-                    <button class="btn apply-btn" data-refined-text="${encodeURIComponent(content.refined)}">應用修改</button>
+                    <div class="action-buttons">
+                        <button class="btn apply-btn" data-refined-text="${encodeURIComponent(content.refined)}" data-edit-id="${content.editId}">
+                            ✓ 應用修改
+                        </button>
+                        <button class="btn feedback-btn feedback-good" data-edit-id="${content.editId}" title="這個修改很好">
+                            👍
+                        </button>
+                        <button class="btn feedback-btn feedback-bad" data-edit-id="${content.editId}" title="這個修改需要改進">
+                            👎
+                        </button>
+                    </div>
                 `;
+                
+                // 應用修改按鈕
                 bubble.querySelector('.apply-btn').addEventListener('click', (e) => {
                     const refinedText = decodeURIComponent(e.target.dataset.refinedText);
+                    const editId = e.target.dataset.editId;
+                    
                     applyRefinement(refinedText);
-                    e.target.textContent = '已應用';
+                    
+                    // 自動發送 "accepted" 反饋
+                    sendUserFeedback(editId, 'accepted');
+                    
+                    e.target.textContent = '✓ 已應用';
                     e.target.disabled = true;
+                    
+                    // 禁用反饋按鈕
+                    bubble.querySelectorAll('.feedback-btn').forEach(btn => btn.disabled = true);
                 });
+                
+                // 好評按鈕
+                bubble.querySelector('.feedback-good').addEventListener('click', (e) => {
+                    const editId = e.target.dataset.editId;
+                    sendUserFeedback(editId, 'accepted');
+                    
+                    e.target.textContent = '✓ 已標記為好';
+                    e.target.disabled = true;
+                    bubble.querySelector('.feedback-bad').disabled = true;
+                });
+                
+                // 差評按鈕
+                bubble.querySelector('.feedback-bad').addEventListener('click', async (e) => {
+                    const editId = e.target.dataset.editId;
+                    const originalRefinedText = decodeURIComponent(
+                        bubble.querySelector('.apply-btn').dataset.refinedText
+                    );
+                    
+                    const issueDescription = prompt(
+                        '這個修改有什麼問題？請簡短說明，AI 會根據您的反饋重新生成。\n\n' +
+                        '例如：\n' +
+                        '• 太簡短，需要更詳細\n' +
+                        '• 不夠專業\n' +
+                        '• 偏離原意\n' +
+                        '• 語氣不對',
+                        ''
+                    );
+                    
+                    // 用戶取消或輸入空白
+                    if (!issueDescription || issueDescription.trim() === '') {
+                        // 只記錄差評，不重新生成
+                        sendUserFeedback(editId, 'rejected');
+                        e.target.textContent = '✓ 已標記為差';
+                        e.target.disabled = true;
+                        bubble.querySelector('.feedback-good').disabled = true;
+                        return;
+                    }
+                    
+                    // 只禁用按鈕，不在原氣泡內添加任何東西
+                    e.target.textContent = '✓ 已反饋';
+                    e.target.disabled = true;
+                    bubble.querySelector('.feedback-good').disabled = true;
+                    bubble.querySelector('.apply-btn').disabled = true;
+                    
+                    // 記錄差評和問題描述
+                    sendUserFeedback(editId, 'rejected', issueDescription);
+                    
+                    // 創建新的獨立用戶消息氣泡
+                    addMessageToChat('user', `這個修改有問題：${issueDescription}\n\n請重新修改。`);
+                    
+                    // 構建新指令
+                    const newInstruction = `之前的修改有問題：${issueDescription}\n\n請根據這個反饋重新修改原始文字。`;
+                    
+                    // 發送重新生成請求
+                    if (ws && ws.readyState === WebSocket.OPEN) {
+                        ws.send(JSON.stringify({
+                            selection: currentSelection.text,
+                            instruction: newInstruction,
+                            history: chatHistory,
+                            report_id: currentReport.id,
+                            report_name: currentReport.name,
+                            is_regeneration: true,
+                            previous_attempt: originalRefinedText
+                        }));
+                        
+                        // 顯示新的獨立載入氣泡
+                        addMessageToChat('ai', null, true);
+                    } else {
+                        addMessageToChat('ai', '連線錯誤，無法重新生成。');
+                    }
+                });
+                
             } else {
                 bubble.textContent = content;
             }
@@ -675,28 +858,39 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function applyRefinement(newText) {
-        // 驗證選取範圍是否仍然有效
-        try {
-            const testRange = currentSelection.range.cloneRange();
-            const testText = testRange.toString();
-            if (testText !== currentSelection.text) {
-                console.error('選取範圍已失效');
-                alert('選取範圍已改變，請重新選取文字');
-                return;
-            }
-        } catch (e) {
-            console.error('無法驗證選取範圍:', e);
-            alert('選取範圍無效，請重新選取文字');
+        if (!currentSelection.text) {
+            alert('沒有選取的文字');
             return;
         }
         
-        if (!currentSelection.range) return;
+        // 嘗試驗證現有 range
+        let rangeIsValid = false;
+        try {
+            const testRange = currentSelection.range.cloneRange();
+            const testText = testRange.toString();
+            if (testText === currentSelection.text) {
+                rangeIsValid = true;
+            }
+        } catch (e) {
+            console.warn('原始 range 已失效，將重新尋找文字位置');
+        }
+        
+        // 如果 range 失效，重新尋找文字位置
+        if (!rangeIsValid) {
+            const found = findAndSelectText(currentSelection.text);
+            if (!found) {
+                alert('無法在文檔中找到原始文字，可能已被修改。請重新選取文字。');
+                return;
+            }
+            console.log('已重新定位原始文字');
+        }
+        
         // 記錄這次修改
         refinedSections.push({
             original: currentSelection.text,
             refined: newText
         });
-        console.log(`📝 記錄修改 #${refinedSections.length}:`, {
+        console.log(`記錄修改 #${refinedSections.length}:`, {
             original: currentSelection.text.substring(0, 50) + '...',
             refined: newText.substring(0, 50) + '...'
         });
@@ -715,7 +909,7 @@ document.addEventListener('DOMContentLoaded', () => {
             outerHTML: img.outerHTML
         }));
         
-        console.log(`📸 保存了 ${allImages.length} 張圖片資訊`);
+        console.log(`保存了 ${allImages.length} 張圖片資訊`);
         
         // 執行文字替換
         const selection = window.getSelection();
@@ -788,6 +982,111 @@ document.addEventListener('DOMContentLoaded', () => {
         resetRefinePanel(false);
     }
 
+    /**
+     * 在文檔中尋找並選取指定文字
+     * @param {string} text - 要尋找的文字
+     * @returns {boolean} - 是否找到並成功選取
+     */
+    function findAndSelectText(text) {
+        try {
+            // 使用 window.find() API (適用於大多數瀏覽器)
+            const found = window.find(text, false, false, true, false, true, false);
+            
+            if (found) {
+                const selection = window.getSelection();
+                if (selection.rangeCount > 0) {
+                    currentSelection.range = selection.getRangeAt(0).cloneRange();
+                    return true;
+                }
+            }
+            
+            // 如果 window.find 失敗，手動搜索
+            return findTextInElement(reportDisplayEl, text);
+            
+        } catch (e) {
+            console.error('尋找文字時出錯:', e);
+            return false;
+        }
+    }
+
+    /**
+     * 在指定元素中遞歸尋找文字並創建選取範圍
+     * @param {HTMLElement} element - 要搜索的元素
+     * @param {string} searchText - 要尋找的文字
+     * @returns {boolean} - 是否找到
+     */
+    function findTextInElement(element, searchText) {
+        const walker = document.createTreeWalker(
+            element,
+            NodeFilter.SHOW_TEXT,
+            null,
+            false
+        );
+        
+        let node;
+        let combinedText = '';
+        let textNodes = [];
+        
+        // 收集所有文字節點
+        while (node = walker.nextNode()) {
+            textNodes.push({
+                node: node,
+                startIndex: combinedText.length,
+                text: node.textContent
+            });
+            combinedText += node.textContent;
+        }
+        
+        // 在組合的文字中尋找目標文字
+        const index = combinedText.indexOf(searchText);
+        if (index === -1) {
+            return false;
+        }
+        
+        // 找到包含目標文字的節點
+        const endIndex = index + searchText.length;
+        let startNode = null;
+        let startOffset = 0;
+        let endNode = null;
+        let endOffset = 0;
+        
+        for (let i = 0; i < textNodes.length; i++) {
+            const textNode = textNodes[i];
+            const nodeEndIndex = textNode.startIndex + textNode.text.length;
+            
+            // 找到起始節點
+            if (!startNode && index >= textNode.startIndex && index < nodeEndIndex) {
+                startNode = textNode.node;
+                startOffset = index - textNode.startIndex;
+            }
+            
+            // 找到結束節點
+            if (endIndex > textNode.startIndex && endIndex <= nodeEndIndex) {
+                endNode = textNode.node;
+                endOffset = endIndex - textNode.startIndex;
+                break;
+            }
+        }
+        
+        // 創建新的選取範圍
+        if (startNode && endNode) {
+            const range = document.createRange();
+            range.setStart(startNode, startOffset);
+            range.setEnd(endNode, endOffset);
+            
+            currentSelection.range = range;
+            
+            // 視覺化選取（可選）
+            const selection = window.getSelection();
+            selection.removeAllRanges();
+            selection.addRange(range);
+            
+            return true;
+        }
+        
+        return false;
+    }
+
     function resetRefinePanel(fullReset = true) {
         selectedTextPreviewEl.innerHTML = '<p class="placeholder">請在報告中用滑鼠選取文字</p>';
         selectedTextPreviewEl.classList.remove('active');
@@ -802,9 +1101,202 @@ document.addEventListener('DOMContentLoaded', () => {
             console.log('重置 refine panel，清空修改記錄');
         }
     }
+    
+    // ==================== 修改歷史功能 ====================
+
+async function showModificationHistory() {
+    if (!currentReport.id) {
+        alert('請先選擇一份報告');
+        return;
+    }
+    
+    const historyModal = document.getElementById('history-modal');
+    const historyLoading = document.getElementById('history-loading');
+    const historyStats = document.getElementById('history-stats');
+    const historyList = document.getElementById('history-list');
+    
+    // 顯示模態框和載入動畫
+    historyModal.classList.remove('hidden');
+    historyLoading.classList.remove('hidden');
+    historyStats.innerHTML = '';
+    historyList.innerHTML = '';
+    
+    try {
+        const response = await fetch(`${BACKEND_URL}/api/report-history/${currentReport.id}`, {
+            headers: { 'ngrok-skip-browser-warning': 'true' }
+        });
+        
+        if (!response.ok) {
+            throw new Error('無法獲取修改歷史');
+        }
+        
+        const data = await response.json();
+        
+        console.log('📜 修改歷史數據:', data);
+        
+        // 隱藏載入動畫
+        historyLoading.classList.add('hidden');
+        
+        // 顯示統計信息
+        displayHistoryStats(data, historyStats);
+        
+        // 顯示修改記錄
+        displayHistoryList(data.modifications, historyList);
+        
+    } catch (error) {
+        console.error('獲取修改歷史失敗:', error);
+        historyLoading.classList.add('hidden');
+        historyList.innerHTML = `
+            <div class="empty-state">
+                <div class="empty-state-icon">⚠️</div>
+                <p class="empty-state-text">無法載入修改歷史：${error.message}</p>
+            </div>
+        `;
+    }
+}
+
+function displayHistoryStats(data, container) {
+    if (data.total_modifications === 0) {
+        container.innerHTML = `
+            <div class="empty-state">
+                <div class="empty-state-icon">📭</div>
+                <p class="empty-state-text">此報告尚無修改記錄</p>
+            </div>
+        `;
+        return;
+    }
+    
+    container.innerHTML = `
+        <div class="stat-item">
+            <span class="stat-value">${data.total_modifications}</span>
+            <span class="stat-label">總修改次數</span>
+        </div>
+        <div class="stat-item">
+            <span class="stat-value">${data.unique_segments}</span>
+            <span class="stat-label">修改段落數</span>
+        </div>
+        <div class="stat-item">
+            <span class="stat-value">${(data.total_modifications / data.unique_segments).toFixed(1)}</span>
+            <span class="stat-label">平均修改次數</span>
+        </div>
+    `;
+}
+
+function displayHistoryList(modifications, container) {
+    if (Object.keys(modifications).length === 0) {
+        container.innerHTML = `
+            <div class="empty-state">
+                <div class="empty-state-icon">📭</div>
+                <p class="empty-state-text">沒有找到任何修改記錄</p>
+            </div>
+        `;
+        return;
+    }
+    
+    let html = '';
+    let segmentIndex = 0;
+    
+    for (const [originalText, versions] of Object.entries(modifications)) {
+        segmentIndex++;
+        
+        html += `
+            <div class="history-segment">
+                <div class="segment-original">
+                    <span class="segment-original-label">原始段落 #${segmentIndex}</span>
+                    <div class="segment-original-text">${escapeHtml(originalText.substring(0, 200))}${originalText.length > 200 ? '...' : ''}</div>
+                </div>
+                
+                <div class="segment-versions">
+                    <div class="version-header">
+                        <span class="version-title">修改版本</span>
+                        <span class="version-count">${versions.length} 個版本</span>
+                    </div>
+                    ${versions.map((version, idx) => createVersionHTML(version, idx + 1, versions.length)).join('')}
+                </div>
+            </div>
+        `;
+    }
+    
+    container.innerHTML = html;
+}
+
+function createVersionHTML(version, versionNum, totalVersions) {
+    const timestamp = new Date(version.timestamp);
+    const formattedDate = timestamp.toLocaleString('zh-TW', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit'
+    });
+    
+    const editTypeBadge = version.edit_type ? 
+        `<span class="edit-type-badge edit-type-${version.edit_type}">${getEditTypeLabel(version.edit_type)}</span>` : '';
+    
+    const feedbackBadge = version.user_feedback ? 
+        `<span class="feedback-badge feedback-${version.user_feedback}">
+            ${version.user_feedback === 'accepted' ? '已接受' : version.user_feedback === 'rejected' ? '已拒絕' : '已修改'}
+        </span>` : '';
+    
+    const stats = version.edit_statistics || {};
+    const editRatio = stats.edit_ratio ? (stats.edit_ratio * 100).toFixed(1) : '0';
+    
+    return `
+        <div class="version-item">
+            <div class="version-meta">
+                <div class="meta-item">
+                    <span class="meta-label">版本:</span>
+                    <span class="meta-value">V${versionNum}/${totalVersions}</span>
+                </div>
+                <div class="meta-item">
+                    <span class="meta-label">時間:</span>
+                    <span class="meta-value">${formattedDate}</span>
+                </div>
+                <div class="meta-item">
+                    <span class="meta-label">修改幅度:</span>
+                    <span class="meta-value">${editRatio}%</span>
+                </div>
+                ${editTypeBadge ? `<div class="meta-item">${editTypeBadge}</div>` : ''}
+                ${feedbackBadge ? `<div class="meta-item">${feedbackBadge}</div>` : ''}
+            </div>
+            
+            ${version.instruction ? `
+                <div class="version-instruction" style="margin-bottom: ${version.refined ? 'var(--space-sm)' : '0'}; padding: var(--space-sm); background: rgba(255, 255, 0, 0.05); border-radius: 4px; font-size: 0.85rem; color: var(--gray-light);">
+                    <strong style="color: var(--glow-accent);">用戶指示:</strong> ${escapeHtml(version.instruction)}
+                </div>
+            ` : ''}
+            
+            <div class="version-refined">
+                <div class="version-refined-text">${escapeHtml(version.refined)}</div>
+            </div>
+        </div>
+    `;
+}
+
+function getEditTypeLabel(type) {
+    const labels = {
+        'expansion': '擴展',
+        'simplification': '簡化',
+        'rewriting': '改寫',
+        'correction': '修正',
+        'style_formal': '正式化',
+        'style_casual': '口語化',
+        'refinement': '優化'
+    };
+    return labels[type] || type;
+}
+
+function closeHistoryModal() {
+    const historyModal = document.getElementById('history-modal');
+    historyModal.classList.add('hidden');
+}
+
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
 
     // --- Start Application ---
     init();
 });
-
-
