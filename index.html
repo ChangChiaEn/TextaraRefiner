@@ -30,6 +30,9 @@
                 <div class="welcome-content">
                     <h2>歡迎使用 AI 報告優化系統</h2>
                     <p>請從左側列表中選擇一份報告開始優化。</p>
+                    <p class="shortcut-hint">提示：按 <kbd>Ctrl+Shift+D</kbd> 查看基本統計</p>
+                    <p class="shortcut-hint">提示：按 <kbd>Ctrl+Shift+A</kbd> 查看詳細分析</p>
+                    <p class="shortcut-hint">提示：按 <kbd>Ctrl+Shift+E</kbd> 導出微調數據</p>
                 </div>
             </div>
 
@@ -37,8 +40,11 @@
                 <header class="report-header">
                     <h2 id="report-title"></h2>
                     <div class="actions">
+                        <button id="view-history-btn" class="btn btn-secondary">
+                            <span class="icon"></span> 查看修改歷史
+                        </button>
                         <button id="save-report-btn" class="btn btn-primary">
-                            <span class="icon">💾</span> 保存報告
+                            <span class="icon"></span> 保存報告
                         </button>
                         <div id="save-status-message" class="save-status"></div>
                     </div>
@@ -48,6 +54,23 @@
                 </div>
             </div>
         </main>
+
+        </main>
+
+        <!-- 修改歷史面板 -->
+        <div id="history-modal" class="modal hidden">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>修改歷史記錄</h2>
+                    <button id="close-history-btn" class="close-btn">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <div id="history-loading" class="loader hidden"></div>
+                    <div id="history-stats" class="history-stats"></div>
+                    <div id="history-list"></div>
+                </div>
+            </div>
+        </div>
 
         <aside id="refine-panel" class="hidden">
             <header class="refine-header">
