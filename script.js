@@ -1,6 +1,6 @@
 document.addEventListener('DOMContentLoaded', () => {
     // ⚠️ 請將此處的 URL 替換為您 Colab 後端生成的 ngrok 網址
-    const BACKEND_URL = 'https://05e269229cc7.ngrok-free.app';
+    const BACKEND_URL = 'https://15a77c875c78.ngrok-free.app';
 
     // --- DOM Elements ---
     const reportListEl = document.getElementById('report-list');
@@ -1300,3 +1300,4 @@ function escapeHtml(text) {
     // --- Start Application ---
     init();
 });
+
